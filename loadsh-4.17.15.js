@@ -17105,12 +17105,14 @@
       if (symIterator) {
         lodash.prototype[symIterator] = wrapperToIterator;
       }
+      // 返回 lodash 函数
       return lodash;
     });
   
     /*--------------------------------------------------------------------------*/
   
     // Export lodash.
+    // _ ===> lodash
     var _ = runInContext();
   
     // Some AMD build optimizers, like r.js, check for condition patterns like:
@@ -17119,15 +17121,21 @@
       // loaded by a script tag in the presence of an AMD loader.
       // See http://requirejs.org/docs/errors.html#mismatch for more details.
       // Use `_.noConflict` to remove Lodash from the global object.
+      /**
+       * 1. 在全局对象上公开Lodash，以防止在存在AMD加载程序的情况下由脚本标记加载Lodash时出错
+       * 2. 使用 `_.noConflict` 从全局对象中删除Lodash。
+       */
       root._ = _;
   
       // Define as an anonymous module so, through path mapping, it can be
       // referenced as the "underscore" module.
       define(function() {
+        // amd 规范导出
         return _;
       });
     }
     // Check for `exports` after `define` in case a build optimizer adds it.
+    // nodejs 中使用
     else if (freeModule) {
       // Export for Node.js.
       (freeModule.exports = _)._ = _;
@@ -17136,6 +17144,7 @@
     }
     else {
       // Export to the global object.
+      // 浏览器中
       root._ = _;
     }
   }.call(this));
