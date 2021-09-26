@@ -227,6 +227,7 @@
               var result = object(this.__wrapped__),
                 actions = result.__actions__ = copyArray(this.__actions__);
 
+              // 链式调用的时候都会存在这，调用 value 方法的时候在调用
               // 存放待执行的函数体func， 函数参数 args，函数执行的this 指向 thisArg。
               actions.push({ 'func': func, 'args': arguments, 'thisArg': object });
               result.__chain__ = chainAll;
@@ -247,11 +248,11 @@
 
     // 返回一个正向、逆序遍历的函数，该函数只会遍历传入的对象自身的属性值为函数的属性集合
     function createBaseFor(fromRight) {
-      return function(object, iteratee, keysFunc) {
+      return function (object, iteratee, keysFunc) {
         var index = -1,
-            iterable = Object(object), // 防止传入的的是一个对象
-            props = keysFunc(object), // object 上 key 为 函数 的属性集合
-            length = props.length;
+          iterable = Object(object), // 防止传入的的是一个对象
+          props = keysFunc(object), // object 上 key 为 函数 的属性集合
+          length = props.length;
 
         while (length--) {
           // 顺序、逆序遍历

@@ -1861,22 +1861,24 @@
        * @returns {*} Returns the unwrapped value.
        */
       function lazyValue() {
-        var array = this.__wrapped__.value(),
-            dir = this.__dir__,
-            isArr = isArray(array),
-            isRight = dir < 0,
-            arrLength = isArr ? array.length : 0,
-            view = getView(0, arrLength, this.__views__),
+        var array = this.__wrapped__.value(), // 值
+            dir = this.__dir__, // 1 或 -1
+            isArr = isArray(array), // 传入的数据是否是数组
+            isRight = dir < 0, // 从右开始遍历？
+            arrLength = isArr ? array.length : 0, // 数组长度
+            // getView 就是确定 数组的起始位置和结束位置
+            view = getView(0, arrLength, this.__views__), // 真实的数据
             start = view.start,
             end = view.end,
-            length = end - start,
+            length = end - start, // 取得数据的长度
             index = isRight ? end : (start - 1),
-            iteratees = this.__iteratees__,
+            iteratees = this.__iteratees__, // 迭代器数组
             iterLength = iteratees.length,
-            resIndex = 0,
-            takeCount = nativeMin(length, this.__takeCount__);
+            resIndex = 0, // 结束时的索引
+            takeCount = nativeMin(length, this.__takeCount__); // 取多少个
   
         if (!isArr || (!isRight && arrLength == length && takeCount == length)) {
+          // 传入的数据不是一个数组，或者 不是从右开始，并且没有截取数据
           return baseWrapperValue(array, this.__actions__);
         }
         var result = [];
@@ -1885,25 +1887,30 @@
         while (length-- && resIndex < takeCount) {
           index += dir;
   
-          var iterIndex = -1,
-              value = array[index];
+          var iterIndex = -1, // 迭代器函数的索引
+              value = array[index]; // 数据第一项
   
           while (++iterIndex < iterLength) {
-            var data = iteratees[iterIndex],
-                iteratee = data.iteratee,
-                type = data.type,
-                computed = iteratee(value);
+            var data = iteratees[iterIndex], 
+                iteratee = data.iteratee, // 迭代器函数
+                type = data.type, // 类型
+                computed = iteratee(value); // 迭代器执行结果
   
+            // map 类型的
             if (type == LAZY_MAP_FLAG) {
-              value = computed;
+              value = computed; // 结果赋值
             } else if (!computed) {
+              // 没有返回值， 或者filter为false
               if (type == LAZY_FILTER_FLAG) {
+                // filter 类型的， // 退出当前这次循环，进行下一次循环
                 continue outer;
               } else {
+                // 其他类型没有返回值的，直接结束循环
                 break outer;
               }
             }
           }
+          // 最终结果
           result[resIndex++] = value;
         }
         return result;
@@ -6103,10 +6110,10 @@
        */
       function getView(start, end, transforms) {
         var index = -1,
-            length = transforms.length;
+            length = transforms.length; // 真实数据的长度
   
         while (++index < length) {
-          var data = transforms[index],
+          var data = transforms[index], // 取每一项
               size = data.size;
   
           switch (data.type) {
@@ -15759,6 +15766,7 @@
                 var result = object(this.__wrapped__),
                     actions = result.__actions__ = copyArray(this.__actions__);
 
+                // 链式调用的时候都会存在这，调用 value 方法的时候在调用
                 // 存放待执行的函数体func， 函数参数 args，函数执行的this 指向 thisArg。
                 actions.push({ 'func': func, 'args': arguments, 'thisArg': object });
                 result.__chain__ = chainAll;
@@ -16921,14 +16929,19 @@
       });
   
       // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
+      // 将 'drop', 'take' 方法挂载到 LazyWrapper 的原型链上
       arrayEach(['drop', 'take'], function(methodName, index) {
         LazyWrapper.prototype[methodName] = function(n) {
+          // 默认是 1 ，传入后将n变为数字
           n = n === undefined ? 1 : nativeMax(toInteger(n), 0);
   
+          // __filtered__ === true 并且是 drop 的时候，返回 new LazyWrapper(this)；
+          // 否则进行 clone，复制一份
           var result = (this.__filtered__ && !index)
             ? new LazyWrapper(this)
             : this.clone();
   
+          // 
           if (result.__filtered__) {
             result.__takeCount__ = nativeMin(n, result.__takeCount__);
           } else {
