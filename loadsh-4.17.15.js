@@ -4075,6 +4075,7 @@
         var index = -1,
             length = array.length;
   
+        // // 确定 start 和 end
         if (start < 0) {
           start = -start > length ? 0 : (length + start);
         }
@@ -4082,11 +4083,13 @@
         if (end < 0) {
           end += length;
         }
+        // 起始位置 > 结束位置，不用分割，length = 0，返回空数据， 否则返回应切割的个数
         length = start > end ? 0 : ((end - start) >>> 0);
         start >>>= 0;
   
         var result = Array(length);
         while (++index < length) {
+          // 循环 length（应该取多少个） 次，取出对应的数
           result[index] = array[index + start];
         }
         return result;
@@ -6300,7 +6303,7 @@
   
       /**
        * Checks if the given arguments are from an iteratee call.
-       *
+       * 检查给定参数是否来自iteratee调用。
        * @private
        * @param {*} value The potential iteratee value argument.
        * @param {*} index The potential iteratee index or key argument.
@@ -6309,10 +6312,11 @@
        *  else `false`.
        */
       function isIterateeCall(value, index, object) {
+        // 迭代器对象不是一个对象，返回false
         if (!isObject(object)) {
           return false;
         }
-        var type = typeof index;
+        var type = typeof index; // 索引 或 key
         if (type == 'number'
               ? (isArrayLike(object) && isIndex(index, object.length))
               : (type == 'string' && index in object)
@@ -6876,20 +6880,28 @@
        * // => [['a', 'b', 'c'], ['d']]
        */
       function chunk(array, size, guard) {
+        // 没传 size 默认为 1
+        // 传入对象 guard 后判断 guard[size] === array
         if ((guard ? isIterateeCall(array, size, guard) : size === undefined)) {
           size = 1;
         } else {
+          // 传入了size，toInteger 将 size 转成整数，取最大值作为 size 的值
           size = nativeMax(toInteger(size), 0);
         }
+        // array 不存在，null undefined
         var length = array == null ? 0 : array.length;
         if (!length || size < 1) {
+          // array不存在，或者 size 为负数的时候返回空数组
           return [];
         }
         var index = 0,
             resIndex = 0,
+            // 根据 length / size 创建 结果数组，向上取整因为 array 无法被分割成全部等长的区块，那么最后剩余的元素将组成一个区块。
             result = Array(nativeCeil(length / size));
   
         while (index < length) {
+          // 依次取出 array 的数字
+          // baseSlice(array, start, end)：根据 start, end 取出 array 中对应的值
           result[resIndex++] = baseSlice(array, index, (index += size));
         }
         return result;
@@ -12373,7 +12385,7 @@
   
       /**
        * Converts `value` to a finite number.
-       *
+       * 将“value”转换为有限数。
        * @static
        * @memberOf _
        * @since 4.12.0
@@ -12396,19 +12408,24 @@
        */
       function toFinite(value) {
         if (!value) {
+          // value 不存在或者为0，返回0
           return value === 0 ? value : 0;
         }
+        // 转成数字
         value = toNumber(value);
+        // 正无穷、负无穷时，
         if (value === INFINITY || value === -INFINITY) {
           var sign = (value < 0 ? -1 : 1);
+          // MAX_INTEGER = 1.7976931348623157e+308, 定义了常量，存储 正无穷、负无穷的绝对值
           return sign * MAX_INTEGER;
         }
+        // value === value 时说明时数字，直接返回，不等于时是 NAN 返回 0
         return value === value ? value : 0;
       }
   
       /**
        * Converts `value` to an integer.
-       *
+       * 将“value”转换为整数。
        * **Note:** This method is loosely based on
        * [`ToInteger`](http://www.ecma-international.org/ecma-262/7.0/#sec-tointeger).
        *
@@ -12433,9 +12450,18 @@
        * // => 3
        */
       function toInteger(value) {
-        var result = toFinite(value),
-            remainder = result % 1;
+        /**
+         * toFinite 返回的是一个有限数，排除了NAN，那么为什么下面还要判断呢？
+         * 答： 每个函数是独立的，不应该依赖外部逻辑，万一某一天 外部函数（这里是toFinite）不处理 NAN 了，那你还的改这里，
+         *  函数与函数之间解耦
+         */
+        var result = toFinite(value), // 有限数
+            remainder = result % 1; // 取出小数部分
   
+        /**
+         * 1. result 是否为 NAN，是的话remainder也是NAN，所以需要在判断
+         * 2. remainder 是否存在，存在则说明有小数部分，相减就好了
+         */
         return result === result ? (remainder ? result - remainder : result) : 0;
       }
   
