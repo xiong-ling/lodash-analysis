@@ -643,7 +643,7 @@
   
     /**
      * Appends the elements of `values` to `array`.
-     *
+     *将节点的值添加进array
      * @private
      * @param {Array} array The array to modify.
      * @param {Array} values The values to append.
@@ -651,10 +651,11 @@
      */
     function arrayPush(array, values) {
       var index = -1,
-          length = values.length,
-          offset = array.length;
+          length = values.length, // 将要添加进来的数组长度
+          offset = array.length; // 原数组的长度
   
       while (++index < length) {
+        // 遍历新添加的数组，从原数组最后依次添加
         array[offset + index] = values[index];
       }
       return array;
@@ -794,11 +795,22 @@
      * @param {boolean} [fromRight] Specify iterating from right to left.
      * @returns {number} Returns the index of the matched value, else `-1`.
      */
+    /** findIndex： fromRight=undefined
+     * findLastIndex： fromRight=true
+     * fromRight：控制遍历方向
+     */
     function baseFindIndex(array, predicate, fromIndex, fromRight) {
       var length = array.length,
-          index = fromIndex + (fromRight ? 1 : -1);
-  
+          index = fromIndex + (fromRight ? 1 : -1); 
+
+      // fromRight 为真时从右往左，为假从左往右
+      /**
+       * findIndex：默认是-1，那么应该 ++index 从第0项开始
+       * findLastIndex：默认 length - 1 + 1，所以要 index--
+       * fromRight ? index-- : ++index < length ===> fromRight ? index-- : (++index < length)
+       */
       while ((fromRight ? index-- : ++index < length)) {
+        // 执行回调函数，为真时返回索引
         if (predicate(array[index], index, array)) {
           return index;
         }
@@ -2789,17 +2801,22 @@
        * @param {Function} [comparator] The comparator invoked per element.
        * @returns {Array} Returns the new array of filtered values.
        */
+      /**
+       * difference： baseDifference(array, values)
+       */
       function baseDifference(array, values, iteratee, comparator) {
         var index = -1,
             includes = arrayIncludes,
             isCommon = true,
-            length = array.length,
+            length = array.length, // 原数组的长度
             result = [],
-            valuesLength = values.length;
+            valuesLength = values.length; // 需要排出的数组的值
   
         if (!length) {
+          // 原数组为空或者不存在，返回[]
           return result;
         }
+        // 迭代函数存在，依次遍历
         if (iteratee) {
           values = arrayMap(values, baseUnary(iteratee));
         }
@@ -2808,6 +2825,7 @@
           isCommon = false;
         }
         else if (values.length >= LARGE_ARRAY_SIZE) {
+          // 排除的数组的长度大于 数组最大长度，进行缓存
           includes = cacheHas;
           isCommon = false;
           values = new SetCache(values);
@@ -2911,10 +2929,18 @@
        * @param {number} [end=array.length] The end position.
        * @returns {Array} Returns `array`.
        */
+      /**
+       * 重点：start、end的确认
+       * [1, 2, 3, 4, 5]分析：
+       * 1. start < 0，那么从数组最后数，第 n 项 开始，比如 -3，那么应该start对应的数字3（倒数第三项），下标 5-3 = 2
+       *     要是 start 的绝对值大于 length，那么已经小于数组起始位置了，直接赋值为 0 
+       * 2. 确定end，结束位置应该小于等于数组长度，end为负数时排除最后几项
+       * 3. 要是 start > end，说明不用填充
+       */
       function baseFill(array, value, start, end) {
         var length = array.length;
   
-        start = toInteger(start);
+        start = toInteger(start); // 对 start格式化成 整数
         if (start < 0) {
           start = -start > length ? 0 : (length + start);
         }
@@ -3953,6 +3979,11 @@
        * @param {number} [start=func.length-1] The start position of the rest parameter.
        * @returns {Function} Returns the new function.
        */
+      // ...arg 的实现
+      /**
+       * overRest: 
+       * setToString: 
+       */
       function baseRest(func, start) {
         return setToString(overRest(func, start, identity), func + '');
       }
@@ -4772,10 +4803,13 @@
         var index = -1,
             length = source.length;
   
+        // array 是否存在，不存在则创建一个和 source 长度相同的数组
         array || (array = Array(length));
         while (++index < length) {
+          // 遍历赋值
           array[index] = source[index];
         }
+        // 返回数组
         return array;
       }
   
@@ -6571,17 +6605,23 @@
   
       /**
        * A specialized version of `baseRest` which transforms the rest array.
-       *
+       * 
        * @private
        * @param {Function} func The function to apply a rest parameter to.
        * @param {number} [start=func.length-1] The start position of the rest parameter.
        * @param {Function} transform The rest array transform.
        * @returns {Function} Returns the new function.
        */
+      // baseRest”的专用版本，用于转换rest数组。
+      /**
+       * 返回一个函数，
+       */
       function overRest(func, start, transform) {
+        // func.length 是函数参数个数，
+        // start 是 (func.length - 1)，排除第一个参数后的数据个数
         start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
         return function() {
-          var args = arguments,
+          var args = arguments, // 接受的参数
               index = -1,
               length = nativeMax(args.length - start, 0),
               array = Array(length);
@@ -6910,6 +6950,7 @@
       /**
        * Creates an array with all falsey values removed. The values `false`, `null`,
        * `0`, `""`, `undefined`, and `NaN` are falsey.
+       * 创建一个新数组，包含原数组中所有的非假值元素。例如false, null,0, "", undefined, 和 NaN 都是被认为是“假值”。
        *
        * @static
        * @memberOf _
@@ -6930,6 +6971,7 @@
   
         while (++index < length) {
           var value = array[index];
+          // 遍历 array 的每一项，该项为真时，添加进新数组
           if (value) {
             result[resIndex++] = value;
           }
@@ -6940,7 +6982,7 @@
       /**
        * Creates a new array concatenating `array` with any additional arrays
        * and/or values.
-       *
+       * 创建一个新数组，将array与任何数组 或 值连接在一起。
        * @static
        * @memberOf _
        * @since 4.0.0
@@ -6960,18 +7002,23 @@
        * // => [1]
        */
       function concat() {
+        // arguments 接受n个参数
         var length = arguments.length;
+        // 没有参数，返回 空数组
         if (!length) {
           return [];
         }
-        var args = Array(length - 1),
-            array = arguments[0],
+        var args = Array(length - 1), // 取 除第一个之外的参数
+            array = arguments[0], // 取 第一个参数
             index = length;
   
         while (index--) {
+          // 倒序去除参数，n 项，则 args 存的是 1-n项
           args[index - 1] = arguments[index];
         }
+        // 将 args 数组 push 进 array数组，args 数组扁平一层
         return arrayPush(isArray(array) ? copyArray(array) : [array], baseFlatten(args, 1));
+        // return baseFlatten([...arguments], 1)
       }
   
       /**
@@ -6994,6 +7041,12 @@
        *
        * _.difference([2, 1], [2, 3]);
        * // => [1]
+       * 创建一个具有唯一array值的数组，每个值不包含在其他给定的数组中。
+       * （注：即创建一个新数组，这个数组中的值，为第一个数字（array 参数）排除了给定数组中的值。）
+       * 即 以 排除 array 中在 values 数组中的项，返回一个新数组
+       */
+      /**
+       * baseRest: 实现类似 ...args剩余参数的功能
        */
       var difference = baseRest(function(array, values) {
         return isArrayLikeObject(array)
@@ -7250,15 +7303,22 @@
        * _.fill([4, 6, 8, 10], '*', 1, 3);
        * // => [4, '*', '*', 10]
        */
+      /**
+       *  使用 value 值来填充（替换） array，从start位置开始, 到end位置结束（但不包含end位置）。
+          Note: 这个方法会改变 array（注：不是创建新数组）。
+       */
       function fill(array, value, start, end) {
         var length = array == null ? 0 : array.length;
+        // 校验传入的数组
         if (!length) {
           return [];
         }
+        // 对start、end进行处理
         if (start && typeof start != 'number' && isIterateeCall(array, value, start)) {
           start = 0;
           end = length;
         }
+        // 进行填充
         return baseFill(array, value, start, end);
       }
   
@@ -7297,15 +7357,20 @@
        * _.findIndex(users, 'active');
        * // => 2
        */
+      // 方法返回第一个通过 predicate 判断为真值的元素的索引值（index），而不是元素本身
       function findIndex(array, predicate, fromIndex) {
         var length = array == null ? 0 : array.length;
+        // array 不存在，直接返回 -1找不到
         if (!length) {
           return -1;
         }
+        // fromIndex 指定起始位置，不存在则为 0
         var index = fromIndex == null ? 0 : toInteger(fromIndex);
         if (index < 0) {
+          // fromIndex 存在的情况，指定了负数，那么只搜索最后几项
           index = nativeMax(length + index, 0);
         }
+        // baseFindIndex： 查找数组是否存在某一项，存在返回索引值，不存在返回-1
         return baseFindIndex(array, getIteratee(predicate, 3), index);
       }
   
@@ -7344,6 +7409,7 @@
        * _.findLastIndex(users, 'active');
        * // => 0
        */
+      // 类似 findIndex
       function findLastIndex(array, predicate, fromIndex) {
         var length = array == null ? 0 : array.length;
         if (!length) {
@@ -7352,6 +7418,7 @@
         var index = length - 1;
         if (fromIndex !== undefined) {
           index = toInteger(fromIndex);
+          // index 应该小与等于 length - 1
           index = fromIndex < 0
             ? nativeMax(length + index, 0)
             : nativeMin(index, length - 1);
